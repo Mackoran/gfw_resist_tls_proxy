@@ -3,7 +3,8 @@
 import socket
 import threading
 from pathlib import Path
-import os
+import os 
+import random
 import copy
 import time
 import datetime
@@ -11,11 +12,11 @@ import logging
 from logging.handlers import TimedRotatingFileHandler
 
 
-if os.name == 'posix':
-    print('os is linux')
-    import resource   # ( -> pip install python-resources )
-    # set linux max_num_open_socket from 1024 to 128k
-    resource.setrlimit(resource.RLIMIT_NOFILE, (127000, 128000))
+
+
+
+
+
 
 
 
@@ -24,13 +25,17 @@ listen_PORT = 2500    # pyprox listening to 127.0.0.1:listen_PORT
 Cloudflare_IP = '162.159.135.42'   # plos.org (can be any dirty cloudflare ip)
 Cloudflare_port = 443
 
-L_fragment = 77   # length of fragments of Client Hello packet (L_fragment Byte in each chunk)
-fragment_sleep = 0.2  # sleep between each fragment to make GFW-cache full so it forget previous chunks. LOL.
+random_number = random.randint(270,560)
+L_fragment = random_number
+fragment_sleep = 0.001
+
+#L_fragment = 77   # length of fragments of Client Hello packet (L_fragment Byte in each chunk)
+#fragment_sleep = 0.2  # sleep between each fragment to make GFW-cache full so it forget previous chunks. LOL.
 
 
 
 # ignore description below , its for old code , just leave it intact.
-my_socket_timeout = 60 # default for google is ~21 sec , recommend 60 sec unless you have low ram and need close soon
+my_socket_timeout = 21 # default for google is ~21 sec , recommend 60 sec unless you have low ram and need close soon
 first_time_sleep = 0.01 # speed control , avoid server crash if huge number of users flooding (default 0.1)
 accept_time_sleep = 0.01 # avoid server crash on flooding request -> max 100 sockets per second
 
@@ -45,7 +50,7 @@ class ThreadedServer(object):
         self.sock.bind((self.host, self.port))
 
     def listen(self):
-        self.sock.listen(128)  # up to 128 concurrent unaccepted socket queued , the more is refused untill accepting those.
+        self.sock.listen(256)  # up to 128 concurrent unaccepted socket queued , the more is refused untill accepting those.
         while True:
             client_sock , client_addr = self.sock.accept()                    
             client_sock.settimeout(my_socket_timeout)
@@ -130,6 +135,7 @@ class ThreadedServer(object):
 
 def send_data_in_fragment(data , sock):
     
+    L_fragment = random.randint(77,250)
     for i in range(0, len(data), L_fragment):
         fragment_data = data[i:i+L_fragment]
         print('send ',len(fragment_data),' bytes')                        
